@@ -190,19 +190,42 @@ void saveToFile() {
         }
     }
     fclose(file);
+
+    // Save doctors
+    FILE *doctorFile = fopen("doctors.txt", "w");
+    for (int i = 0; i < MAX_DOCTORS; i++) {
+        if (doctors[i].id) {
+            fprintf(doctorFile, "%d,%s,%s\n", doctors[i].id, doctors[i].name, doctors[i].specialty);
+        }
+    }
+    fclose(doctorFile);
 }
 
 void loadFromFile() {
     FILE *file = fopen("patients.txt", "r");
     if (file) {
-        int i = 0;
+        int i = 0;  // Declare i here
         while (fscanf(file, "%d,%49[^,],%d,%49[^,],%99[^\n]", &patients[i].id, patients[i].name, &patients[i].age, patients[i].disease, patients[i].visitHistory) == 5) {
             patients[i].isOccupied = 1;
-            i++;
+            i++;  // Increment i after each patient is loaded
         }
         fclose(file);
     }
+
+    // Load doctors
+    FILE *doctorFile = fopen("doctors.txt", "r");
+    if (doctorFile) {
+        int i = 0;  // Declare i for doctor loading
+        while (fscanf(doctorFile, "%d,%49[^,],%49[^\n]", &doctors[i].id, doctors[i].name, doctors[i].specialty) == 3) {
+            // Find the first empty slot to save the doctor
+            if (doctors[i].id != 0) {
+                i++;  // Increment i for each doctor loaded
+            }
+        }
+        fclose(doctorFile);
+    }
 }
+
 
 void displayPatients() {
     printf("\n=== Patient Records ===\n");
