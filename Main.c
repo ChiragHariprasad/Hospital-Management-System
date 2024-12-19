@@ -3,232 +3,229 @@
 
 #define MAX_PATIENTS 100
 #define MAX_DOCTORS 10
-#define MAX_NAME_LEN 50
+#define MAX_NAME_LENGTH 50
+#define MAX_QUEUE_SIZE 100
 
-// Structure for storing doctor info
-struct Doctor {
-    int id;
-    char name[MAX_NAME_LEN];
-    char specialty[MAX_NAME_LEN];
-};
-
-// Function prototypes
-void addDoctor(struct Doctor docs[], int *docCount);
-void removeDoctor(struct Doctor docs[], int *docCount);
-
-// Structure for storing patient info
+// Structure for storing patient information
 struct Patient {
     int id;
-    char name[MAX_NAME_LEN];
+    char name[MAX_NAME_LENGTH];
     int age;
-    char disease[MAX_NAME_LEN];
+    char disease[MAX_NAME_LENGTH];
     char visitHistory[100];
-    int occupied; // Slot occupation check
+    int isOccupied;  // To check if a slot is occupied in the hash map
 };
 
-// Queue structure
+// Structure for storing doctor information
+struct Doctor {
+    int id;
+    char name[MAX_NAME_LENGTH];
+    char specialty[MAX_NAME_LENGTH];
+};
+
+// Structure for the waiting queue
 struct Queue {
-    int front, rear;
-    int items[MAX_PATIENTS];
+    struct Patient patients[MAX_QUEUE_SIZE];
+    int front;
+    int rear;
 };
 
-// Queue initialization
-void initQueue(struct Queue* q) {
-    q->front = -1;
-    q->rear = -1;
+// Function to initialize the queue
+void initQueue(struct Queue *queue) {
+    queue->front = -1;
+    queue->rear = -1;
 }
 
-// Check if queue is empty
-int isQueueEmpty(struct Queue* q) {
-    return (q->front == -1);
+// Function to check if the queue is empty
+int isQueueEmpty(struct Queue *queue) {
+    return (queue->front == -1);
 }
 
-// Add patient to queue
-void enqueue(struct Queue* q, int patientId) {
-    if (q->rear == MAX_PATIENTS - 1) {
-        printf("Queue is full\n");
+// Function to check if the queue is full
+int isQueueFull(struct Queue *queue) {
+    return (queue->rear == MAX_QUEUE_SIZE - 1);
+}
+
+// Function to enqueue a patient
+void enqueue(struct Queue *queue, struct Patient patient) {
+    if (isQueueFull(queue)) {
+        printf("Queue is full! Cannot add more patients.\n");
         return;
     }
-    if (q->front == -1)
-        q->front = 0;
-    q->rear++;
-    q->items[q->rear] = patientId;
-}
-
-// Remove patient from queue
-int dequeue(struct Queue* q) {
-    if (isQueueEmpty(q)) {
-        printf("Queue is empty\n");
-        return -1;
+    if (queue->front == -1) {
+        queue->front = 0; // Set front if it's the first element
     }
-    int patientId = q->items[q->front];
-    q->front++;
-    if (q->front > q->rear)
-        q->front = q->rear = -1;
-    return patientId;
+    queue->patients[++queue->rear] = patient;  // Add patient to the queue
 }
 
-// Hash function to map patient ID
-int hash(int id) {
-    return id % MAX_PATIENTS;
+// Function to dequeue a patient
+struct Patient dequeue(struct Queue *queue) {
+    if (isQueueEmpty(queue)) {
+        printf("Queue is empty! No patients to assign.\n");
+        struct Patient emptyPatient = {0}; // Return an empty patient structure
+        return emptyPatient;
+    }
+    struct Patient patient = queue->patients[queue->front];
+    if (queue->front >= queue->rear) { // Reset queue when last patient is dequeued
+        queue->front = queue->rear = -1;
+    } else {
+        queue->front++;
+    }
+    return patient;
 }
 
-// Add new patient
-void addPatient(struct Patient patients[], int* patientCount) {
+// Function to save patient data to file
+void savePatients(struct Patient patients[], int patientCount) {
+    FILE *file = fopen("patients.dat", "wb");
+    if (file == NULL) {
+        printf("Error opening file for saving patient data.\n");
+        return;
+    }
+    fwrite(&patientCount, sizeof(int), 1, file);  // Save patient count
+    fwrite(patients, sizeof(struct Patient), patientCount, file);  // Save patient data
+    fclose(file);
+}
+
+// Function to load patient data from file
+void loadPatients(struct Patient patients[], int *patientCount) {
+    FILE *file = fopen("patients.dat", "rb");
+    if (file == NULL) {
+        printf("No previous patient data found.\n");
+        return;
+    }
+    fread(patientCount, sizeof(int), 1, file);  // Load patient count
+    fread(patients, sizeof(struct Patient), *patientCount, file);  // Load patient data
+    fclose(file);
+}
+
+// Function to save doctor data to file
+void saveDoctors(struct Doctor doctors[], int doctorCount) {
+    FILE *file = fopen("doctors.dat", "wb");
+    if (file == NULL) {
+        printf("Error opening file for saving doctor data.\n");
+        return;
+    }
+    fwrite(&doctorCount, sizeof(int), 1, file);  // Save doctor count
+    fwrite(doctors, sizeof(struct Doctor), doctorCount, file);  // Save doctor data
+    fclose(file);
+}
+
+// Function to load doctor data from file
+void loadDoctors(struct Doctor doctors[], int *doctorCount) {
+    FILE *file = fopen("doctors.dat", "rb");
+    if (file == NULL) {
+        printf("No previous doctor data found.\n");
+        return;
+    }
+    fread(doctorCount, sizeof(int), 1, file);  // Load doctor count
+    fread(doctors, sizeof(struct Doctor), *doctorCount, file);  // Load doctor data
+    fclose(file);
+}
+
+// Function to save queue data to file
+void saveQueue(struct Queue *queue) {
+    FILE *file = fopen("queue.dat", "wb");
+    if (file == NULL) {
+        printf("Error opening file for saving queue data.\n");
+        return;
+    }
+    fwrite(&queue->front, sizeof(int), 1, file);  // Save front index
+    fwrite(&queue->rear, sizeof(int), 1, file);   // Save rear index
+    fwrite(queue->patients, sizeof(struct Patient), queue->rear + 1, file);  // Save queue data
+    fclose(file);
+}
+
+// Function to load queue data from file
+void loadQueue(struct Queue *queue) {
+    FILE *file = fopen("queue.dat", "rb");
+    if (file == NULL) {
+        printf("No previous queue data found.\n");
+        return;
+    }
+    fread(&queue->front, sizeof(int), 1, file);  // Load front index
+    fread(&queue->rear, sizeof(int), 1, file);   // Load rear index
+    fread(queue->patients, sizeof(struct Patient), queue->rear + 1, file);  // Load queue data
+    fclose(file);
+}
+
+// Function to add a patient to the system
+void addPatient(struct Patient patients[], int *patientCount, struct Queue *queue) {
     if (*patientCount >= MAX_PATIENTS) {
-        printf("Max capacity reached for patients.\n");
+        printf("Cannot add more patients. Maximum capacity reached.\n");
         return;
     }
     struct Patient newPatient;
     printf("Enter Patient ID: ");
     scanf("%d", &newPatient.id);
-    getchar(); // Consume newline
+    getchar(); // consume newline
     printf("Enter Patient Name: ");
-    fgets(newPatient.name, MAX_NAME_LEN, stdin);
+    fgets(newPatient.name, MAX_NAME_LENGTH, stdin);
     newPatient.name[strcspn(newPatient.name, "\n")] = 0; // Remove newline
     printf("Enter Patient Age: ");
     scanf("%d", &newPatient.age);
-    getchar(); // Consume newline
+    getchar(); // consume newline
     printf("Enter Disease: ");
-    fgets(newPatient.disease, MAX_NAME_LEN, stdin);
+    fgets(newPatient.disease, MAX_NAME_LENGTH, stdin);
     newPatient.disease[strcspn(newPatient.disease, "\n")] = 0; // Remove newline
     printf("Enter Visit History: ");
     fgets(newPatient.visitHistory, 100, stdin);
     newPatient.visitHistory[strcspn(newPatient.visitHistory, "\n")] = 0; // Remove newline
 
-    int index = hash(newPatient.id);
-    while (patients[index].occupied) { // Collision handling
-        index = (index + 1) % MAX_PATIENTS;
-    }
-
-    patients[index] = newPatient;
-    patients[index].occupied = 1; // Mark as occupied
+    // Adding the patient to the array and enqueueing the patient
+    patients[*patientCount] = newPatient;
     (*patientCount)++;
+    enqueue(queue, newPatient);
+
+    // Save updated data to files
+    savePatients(patients, *patientCount);
+    saveQueue(queue);
+
     printf("Patient added successfully!\n");
 }
 
-// Remove patient
-void removePatient(struct Patient patients[], int* patientCount) {
-    int id;
-    printf("Enter Patient ID to remove: ");
-    scanf("%d", &id);
-
-    int index = hash(id);
-    int found = 0;
-    while (patients[index].occupied) {
-        if (patients[index].id == id) {
-            found = 1;
-            patients[index].occupied = 0;
-            (*patientCount)--;
-            printf("Patient removed successfully!\n");
-            break;
-        }
-        index = (index + 1) % MAX_PATIENTS;
-    }
-    if (!found) {
-        printf("Patient not found.\n");
-    }
-}
-
-// Display patient records
-void displayPatients(struct Patient patients[], int patientCount) {
+// Function to display patient records
+void displayPatientRecords(struct Patient patients[], int patientCount) {
     printf("\nPatient Records:\n");
-    for (int i = 0; i < MAX_PATIENTS; i++) {
-        if (patients[i].occupied) {
-            printf("ID: %d, Name: %s, Age: %d, Disease: %s, Visit History: %s\n",
-                    patients[i].id, patients[i].name, patients[i].age, patients[i].disease, patients[i].visitHistory);
-        }
+    for (int i = 0; i < patientCount; i++) {
+        printf("ID: %d, Name: %s, Age: %d, Disease: %s, Visit History: %s\n",
+               patients[i].id, patients[i].name, patients[i].age, patients[i].disease, patients[i].visitHistory);
     }
 }
 
-// Display doctor assignments
-void displayDoctors(struct Doctor doctors[], int doctorCount, struct Patient patients[], int patientCount) {
-    printf("\nDoctor Assignments:\n");
-    for (int i = 0; i < doctorCount; i++) {
-        printf("Doctor: %s, Specialty: %s\n", doctors[i].name, doctors[i].specialty);
-        for (int j = 0; j < patientCount; j++) {
-            if (patients[j].id == (i + 1)) {
-                printf("  Patient: %s, Disease: %s\n", patients[j].name, patients[j].disease);
-            }
-        }
-    }
-}
-
-// Display waiting queue
-void displayQueue(struct Queue* q, struct Patient patients[], int patientCount) {
-    printf("\nCurrent Waiting Queue:\n");
-    if (isQueueEmpty(q)) {
-        printf("No patients in the queue\n");
+// Function to display waiting queue
+void displayQueue(struct Queue *queue) {
+    printf("\nWaiting Queue:\n");
+    if (isQueueEmpty(queue)) {
+        printf("The queue is empty.\n");
         return;
     }
-    for (int i = q->front; i <= q->rear; i++) {
-        int patientId = q->items[i];
-        printf("Patient ID: %d, Name: %s\n", patients[patientId].id, patients[patientId].name);
-    }
-}
-
-// Function to add a doctor
-void addDoctor(struct Doctor docs[], int *docCount) {
-    if (*docCount >= MAX_DOCTORS) {
-        printf("Cannot add more doctors. Maximum capacity reached.\n");
-        return;
-    }
-    struct Doctor newDoc;
-    printf("Enter Doctor ID: ");
-    scanf("%d", &newDoc.id);
-    getchar(); // consume newline
-    printf("Enter Doctor Name: ");
-    fgets(newDoc.name, MAX_NAME_LEN, stdin);
-    newDoc.name[strcspn(newDoc.name, "\n")] = 0; // Remove newline
-    printf("Enter Doctor Specialty: ");
-    fgets(newDoc.specialty, MAX_NAME_LEN, stdin);
-    newDoc.specialty[strcspn(newDoc.specialty, "\n")] = 0; // Remove newline
-
-    docs[*docCount] = newDoc;
-    (*docCount)++;
-    printf("Doctor added successfully!\n");
-}
-
-// Function to remove a doctor
-void removeDoctor(struct Doctor docs[], int *docCount) {
-    int id;
-    printf("Enter Doctor ID to remove: ");
-    scanf("%d", &id);
-
-    int found = 0;
-    for (int i = 0; i < *docCount; i++) {
-        if (docs[i].id == id) {
-            found = 1;
-            for (int j = i; j < *docCount - 1; j++) {
-                docs[j] = docs[j + 1];
-            }
-            (*docCount)--;
-            printf("Doctor removed successfully!\n");
-            break;
-        }
-    }
-
-    if (!found) {
-        printf("Doctor not found.\n");
+    for (int i = queue->front; i <= queue->rear; i++) {
+        printf("ID: %d, Name: %s, Disease: %s\n",
+               queue->patients[i].id, queue->patients[i].name, queue->patients[i].disease);
     }
 }
 
 int main() {
-    struct Patient patients[MAX_PATIENTS] = {0}; // Initialize with 0 (unoccupied)
+    struct Patient patients[MAX_PATIENTS] = {0};
     int patientCount = 0;
     
     struct Doctor doctors[MAX_DOCTORS];
     int doctorCount = 0;
     
-    struct Queue waitingQueue;
-    initQueue(&waitingQueue);
-    
+    struct Queue queue;
+    initQueue(&queue);
+
+    // Load previously saved data
+    loadPatients(patients, &patientCount);
+    loadDoctors(doctors, &doctorCount);
+    loadQueue(&queue);
+
     int choice;
     while (1) {
         printf("\nMenu:\n");
         printf("1. Manage Patient Records\n");
         printf("2. Manage Doctor Assignments\n");
-        printf("3. Manage Waiting Queue\n");
+        printf("3. View Waiting Queue\n");
         printf("4. Exit\n");
         printf("Enter your choice: ");
         scanf("%d", &choice);
@@ -237,53 +234,21 @@ int main() {
             case 1:
                 printf("\nPatient Record Management:\n");
                 printf("1. Add Patient\n");
-                printf("2. Remove Patient\n");
-                printf("3. Display Patient Records\n");
+                printf("2. Display Patient Records\n");
                 printf("Enter your choice: ");
                 int recordChoice;
                 scanf("%d", &recordChoice);
                 if (recordChoice == 1) {
-                    addPatient(patients, &patientCount);
+                    addPatient(patients, &patientCount, &queue);
                 } else if (recordChoice == 2) {
-                    removePatient(patients, &patientCount);
-                } else if (recordChoice == 3) {
-                    displayPatients(patients, patientCount);
+                    displayPatientRecords(patients, patientCount);
                 }
                 break;
             case 2:
-                printf("\nDoctor Assignment Management:\n");
-                printf("1. Add Doctor\n");
-                printf("2. Remove Doctor\n");
-                printf("3. Display Doctor Assignments\n");
-                printf("Enter your choice: ");
-                int doctorChoice;
-                scanf("%d", &doctorChoice);
-                if (doctorChoice == 1) {
-                    addDoctor(doctors, &doctorCount);
-                } else if (doctorChoice == 2) {
-                    removeDoctor(doctors, &doctorCount);
-                } else if (doctorChoice == 3) {
-                    displayDoctors(doctors, doctorCount, patients, patientCount);
-                }
+                // Doctor management part can be implemented here
                 break;
             case 3:
-                printf("\nWaiting Queue Management:\n");
-                printf("1. Add Patient to Queue\n");
-                printf("2. Remove Patient from Queue\n");
-                printf("3. Display Waiting Queue\n");
-                printf("Enter your choice: ");
-                int queueChoice;
-                scanf("%d", &queueChoice);
-                if (queueChoice == 1) {
-                    int patientId;
-                    printf("Enter Patient ID to add to queue: ");
-                    scanf("%d", &patientId);
-                    enqueue(&waitingQueue, patientId);
-                } else if (queueChoice == 2) {
-                    dequeue(&waitingQueue);
-                } else if (queueChoice == 3) {
-                    displayQueue(&waitingQueue, patients, patientCount);
-                }
+                displayQueue(&queue);
                 break;
             case 4:
                 printf("Exiting program...\n");
