@@ -1,172 +1,118 @@
-Patient and Doctor Management System
+# Patient Management System
 
-Overview
+## Overview
 
-This C program is a simple management system designed to handle:
+This is a **Patient Management System** written in C. It is designed to manage patient records, doctor assignments, and a waiting queue system in a healthcare facility. The system utilizes structures, queues, and hashing to organize data effectively, providing functionalities such as adding/removing patients and doctors, displaying records, and managing waiting queues.
 
-Patient records.
+---
 
-Doctor assignments.
+## Features
 
-A waiting queue for patients.
+### 1. **Patient Record Management**
+   - **Add Patient**: Records the details of a new patient.
+   - **Remove Patient**: Deletes a patient record based on the provided ID.
+   - **Display Patient Records**: Displays the list of all patients.
 
-The program uses data structures such as arrays, hash tables, and queues to organize and manage the data efficiently. It is an interactive console application with menu-driven functionality.
+### 2. **Doctor Management**
+   - **Add Doctor**: Records a new doctor's details.
+   - **Remove Doctor**: Deletes a doctor’s record using their ID.
+   - **Display Doctor Assignments**: Lists all doctors along with their specialties and assigned patients.
 
-Features
+### 3. **Waiting Queue Management**
+   - **Add to Queue**: Adds a patient to the waiting queue using their ID.
+   - **Remove from Queue**: Removes the patient at the front of the queue.
+   - **Display Queue**: Displays all patients currently in the waiting queue.
 
-1. Patient Record Management:
+---
 
-Add Patient:
+## System Components
 
-Stores details such as ID, name, age, disease, and visit history.
+### 1. **Data Structures**
+   - **`struct Patient`**: Stores patient information, including ID, name, age, disease, visit history, and slot occupation status.
+   - **`struct Doctor`**: Stores doctor information, including ID, name, and specialty.
+   - **`struct Queue`**: Implements a queue for managing the waiting list.
 
-Uses a hash function for efficient storage and lookup.
+### 2. **Hashing**
+   - Utilizes a simple hash function to store patient records efficiently by mapping patient IDs to an index in the array.
 
-Handles collisions with linear probing.
+### 3. **Collision Handling**
+   - Employs linear probing to resolve hash collisions when two IDs map to the same index.
 
-Remove Patient:
+---
 
-Removes a patient from the records using their ID.
+## How to Use
 
-Frees up the occupied slot in the hash table.
+### **1. Running the Program**
+   - Compile the program using a C compiler (e.g., `gcc`).
+   - Execute the compiled binary.
 
-Display Patient Records:
+### **2. Main Menu**
+   - Select options from the main menu:
+     1. **Manage Patient Records**
+     2. **Manage Doctor Assignments**
+     3. **Manage Waiting Queue**
+     4. **Exit**
 
-Displays all stored patient details.
+### **3. Patient Management**
+   - Add a new patient by providing ID, name, age, disease, and visit history.
+   - Remove an existing patient by entering their ID.
+   - Display all existing patient records.
 
-2. Doctor Assignment Management:
+### **4. Doctor Management**
+   - Add a new doctor by providing ID, name, and specialty.
+   - Remove a doctor by entering their ID.
+   - View all doctor-patient assignments.
 
-Add Doctor:
+### **5. Waiting Queue**
+   - Add a patient to the queue by entering their ID.
+   - Remove the patient at the front of the queue.
+   - Display the current waiting queue.
 
-Stores doctor details including ID, name, and specialty.
+---
 
-Remove Doctor:
+## Constraints
 
-Deletes a doctor record using their ID.
+- **Maximum Patients**: 100
+- **Maximum Doctors**: 10
+- **Name Length**: 50 characters
 
-Display Doctor Assignments:
+---
 
-Lists doctors and their specialties, along with the patients assigned to them.
+## Dependencies
 
-3. Waiting Queue Management:
+This program does not depend on external libraries and runs on any C compiler.
 
-Add Patient to Queue:
+---
 
-Adds a patient's ID to the waiting queue.
+## Notes
 
-Maintains a FIFO (First In, First Out) structure.
+1. **Collision Handling**: The program uses linear probing for hashing collisions in the patient management system.
+2. **Queue Implementation**: A simple queue is used for the waiting list with basic enqueue and dequeue operations.
+3. **Input Validation**: Limited input validation is implemented, so ensure valid inputs during use.
 
-Remove Patient from Queue:
+---
 
-Removes the patient at the front of the queue.
+## Future Enhancements
 
-Display Waiting Queue:
+- Add support for saving and loading data from a file.
+- Include advanced search and filtering options for patient and doctor records.
+- Improve input validation and error handling.
+- Implement dynamic memory allocation for scalability.
 
-Shows the IDs and names of patients in the queue.
+---
 
-Data Structures
+## Compilation Instructions
 
-Hash Table (Patient Records):
+1. Save the code in a file, e.g., `patient_management.c`.
+2. Compile the code using:
+   ```bash
+   gcc -o patient_management patient_management.c
+   ```
+3. Run the program:
+   ```bash
+   ./patient_management
+   ```
 
-Maps patient IDs to their details using a hash function.
+---
 
-Handles collisions using linear probing.
-
-Queue (Waiting Queue):
-
-Implements a circular queue for managing patient waiting lists.
-
-Array (Doctor Records):
-
-Stores doctor details in a simple array.
-
-Functions
-
-General Utility
-
-hash(int id): Computes the hash value for patient IDs.
-
-Patient Management
-
-addPatient: Adds a new patient to the system.
-
-removePatient: Removes a patient from the system by ID.
-
-displayPatients: Prints all patient records.
-
-Doctor Management
-
-addDoctor: Adds a new doctor to the system.
-
-removeDoctor: Removes a doctor by ID.
-
-displayDoctors: Lists doctors along with their assigned patients.
-
-Queue Operations
-
-initQueue: Initializes a queue.
-
-isQueueEmpty: Checks if the queue is empty.
-
-enqueue: Adds a patient ID to the queue.
-
-dequeue: Removes the patient ID at the front of the queue.
-
-displayQueue: Displays all patient IDs in the queue with their details.
-
-Program Flow
-
-Main Menu:
-
-Navigate between patient records, doctor assignments, and waiting queue management.
-
-Submenus:
-
-Each section has its submenu for specific actions (e.g., add/remove/display).
-
-Exit Option:
-
-Ends the program execution gracefully.
-
-Limitations
-
-Fixed Sizes:
-
-Maximum patients: 100.
-
-Maximum doctors: 10.
-
-Collision Handling:
-
-Uses linear probing, which may degrade performance with high collision rates.
-
-Queue Overflow:
-
-Queue has a fixed capacity of 100 patients.
-
-How to Run
-
-Compile the program using a C compiler, such as GCC:
-
-gcc -o management_system management_system.c
-
-Run the executable:
-
-./management_system
-
-Follow the on-screen menu to interact with the system.
-
-Future Enhancements
-
-Dynamic memory allocation for handling larger data sets.
-
-Implementing priority queues for patients based on severity.
-
-Adding database integration for persistent storage.
-
-Enhancing doctor-patient assignment logic.
-
-Author
-
-This program is collaboratively developed by Chirag, Mowin, Mownil, Joseph, and Shamith, as part of a project to explore data structures and analytics in practical applications.
-
+This program is a simple yet functional patient management system designed for small-scale healthcare applications, showcasing basic data structures and algorithms in C.
