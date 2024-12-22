@@ -1,118 +1,162 @@
-# Patient Management System
+# Hospital Management System
 
 ## Overview
-
-This is a **Patient Management System** written in C. It is designed to manage patient records, doctor assignments, and a waiting queue system in a healthcare facility. The system utilizes structures, queues, and hashing to organize data effectively, providing functionalities such as adding/removing patients and doctors, displaying records, and managing waiting queues.
-
----
+A comprehensive C-based Hospital Management System designed to manage patient records, doctor assignments, and a priority-based waiting queue. The system includes features for handling both regular and emergency patients, tracking patient visits, and managing doctor availability.
 
 ## Features
 
-### 1. **Patient Record Management**
-   - **Add Patient**: Records the details of a new patient.
-   - **Remove Patient**: Deletes a patient record based on the provided ID.
-   - **Display Patient Records**: Displays the list of all patients.
+### 1. Patient Management
+- Add new patients with details (ID, name, age, condition)
+- Remove existing patients
+- Track patient visit history
+- Distinguish between emergency and regular patients
+- View all patient records in a formatted display
 
-### 2. **Doctor Management**
-   - **Add Doctor**: Records a new doctor's details.
-   - **Remove Doctor**: Deletes a doctor’s record using their ID.
-   - **Display Doctor Assignments**: Lists all doctors along with their specialties and assigned patients.
+### 2. Doctor Management
+- Add new doctors with specializations
+- Remove doctors from the system
+- Track doctor availability status
+- View all doctor records and their current status
+- Assign doctors to patients
 
-### 3. **Waiting Queue Management**
-   - **Add to Queue**: Adds a patient to the waiting queue using their ID.
-   - **Remove from Queue**: Removes the patient at the front of the queue.
-   - **Display Queue**: Displays all patients currently in the waiting queue.
+### 3. Waiting Queue System
+- Priority-based queue (emergency patients get priority)
+- Add patients to waiting queue
+- Remove patients from queue when doctor available
+- View current queue status
 
----
+### 4. Data Persistence
+- Save all records to binary file
+- Load existing records on startup
+- Sample data generation utility included
 
-## System Components
+## System Requirements
+- C compiler (GCC recommended)
+- Terminal/Command Prompt
+- Operating System: Windows/Linux/MacOS
 
-### 1. **Data Structures**
-   - **`struct Patient`**: Stores patient information, including ID, name, age, disease, visit history, and slot occupation status.
-   - **`struct Doctor`**: Stores doctor information, including ID, name, and specialty.
-   - **`struct Queue`**: Implements a queue for managing the waiting list.
+## Installation & Setup
 
-### 2. **Hashing**
-   - Utilizes a simple hash function to store patient records efficiently by mapping patient IDs to an index in the array.
+1. **Compile the Data Generator:**
+```bash
+gcc generate_data.c -o generate_data
+```
 
-### 3. **Collision Handling**
-   - Employs linear probing to resolve hash collisions when two IDs map to the same index.
+2. **Generate Initial Sample Data:**
+```bash
+./generate_data
+```
 
----
+3. **Compile the Main Program:**
+```bash
+gcc hospital_management.c -o hospital_management
+```
 
-## How to Use
+4. **Run the Program:**
+```bash
+./hospital_management
+```
 
-### **1. Running the Program**
-   - Compile the program using a C compiler (e.g., `gcc`).
-   - Execute the compiled binary.
+## File Structure
+- `hospital_management.c` - Main program file
+- `generate_data.c` - Sample data generator utility
+- `hospital_data.bin` - Binary file storing system data
 
-### **2. Main Menu**
-   - Select options from the main menu:
-     1. **Manage Patient Records**
-     2. **Manage Doctor Assignments**
-     3. **Manage Waiting Queue**
-     4. **Exit**
+## Sample Data Included
 
-### **3. Patient Management**
-   - Add a new patient by providing ID, name, age, disease, and visit history.
-   - Remove an existing patient by entering their ID.
-   - Display all existing patient records.
+### Sample Patients
+- 15 patients with various conditions
+- Mix of emergency and regular cases
+- Various age groups and medical conditions
+- Different visit histories
 
-### **4. Doctor Management**
-   - Add a new doctor by providing ID, name, and specialty.
-   - Remove a doctor by entering their ID.
-   - View all doctor-patient assignments.
+## Usage Guide
 
-### **5. Waiting Queue**
-   - Add a patient to the queue by entering their ID.
-   - Remove the patient at the front of the queue.
-   - Display the current waiting queue.
+### Main Menu Options
+1. **Manage Patient Records**
+   - Add new patients
+   - Remove existing patients
+   - View all patient records
 
----
+2. **Manage Doctor Assignments**
+   - Add new doctors
+   - Remove doctors
+   - View doctor status
+   - Mark doctors as available
 
-## Constraints
+3. **Manage Waiting Queue**
+   - Add patients to queue
+   - Remove patients from queue
+   - View current queue
 
-- **Maximum Patients**: 100
-- **Maximum Doctors**: 10
-- **Name Length**: 50 characters
+4. **Save and Exit**
+   - Save all changes to file
+   - Exit program
 
----
+### Navigation
+- Use number keys to select menu options
+- Press Enter after each selection
+- Follow on-screen prompts for data entry
+- Press Enter to continue after viewing records
 
-## Dependencies
+## Data Management
+- All data is automatically saved when exiting
+- Previous data is loaded on startup
+- If no previous data exists, sample data is loaded
 
-This program does not depend on external libraries and runs on any C compiler.
+## Technical Details
 
----
+### Data Structures
+- Maximum 100 patients
+- Maximum 10 doctors
+- Priority queue for patient waiting list
+- Hash table implementation for patient records
 
-## Notes
+### Algorithms
+- Hash-based patient record storage
+- Priority-based queuing system
+- Linear probing for collision resolution
 
-1. **Collision Handling**: The program uses linear probing for hashing collisions in the patient management system.
-2. **Queue Implementation**: A simple queue is used for the waiting list with basic enqueue and dequeue operations.
-3. **Input Validation**: Limited input validation is implemented, so ensure valid inputs during use.
+## Best Practices
+1. Always save before exiting
+2. Update doctor status after patient consultation
+3. Check waiting queue regularly
+4. Verify patient ID before operations
+5. Keep track of emergency cases
 
----
+## Error Handling
+- Checks for maximum capacity
+- Validates patient and doctor IDs
+- Handles file operations safely
+- Prevents duplicate entries
 
-## Future Enhancements
+## Limitations
+- Fixed maximum capacity for patients and doctors
+- Single binary file for data storage
+- Basic text-based user interface
 
-- Add support for saving and loading data from a file.
-- Include advanced search and filtering options for patient and doctor records.
-- Improve input validation and error handling.
-- Implement dynamic memory allocation for scalability.
+## Future Improvements
+1. Database integration
+2. Multi-user support
+3. Appointment scheduling
+4. Patient history tracking
+5. Advanced reporting features
+6. GUI implementation
 
----
+## Support
+For issues and suggestions:
+1. Check input data format
+2. Verify file permissions
+3. Ensure proper compilation
+4. Check system requirements
 
-## Compilation Instructions
+## Contributing
+To contribute to this project:
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
-1. Save the code in a file, e.g., `patient_management.c`.
-2. Compile the code using:
-   ```bash
-   gcc -o patient_management patient_management.c
-   ```
-3. Run the program:
-   ```bash
-   ./patient_management
-   ```
-
----
-
-This program is a simple yet functional patient management system designed for small-scale healthcare applications, showcasing basic data structures and algorithms in C.
+## License
+This project is open-source and available under the MIT License.
