@@ -29,31 +29,31 @@ int main() {
     int doctorCount = 0;
 
     struct Doctor sampleDoctors[] = {
-        {1, "Dr. John Smith", "Cardiology", 0},
-        {2, "Dr. Sarah Johnson", "Pediatrics", 0},
-        {3, "Dr. Michael Chen", "Orthopedics", 0},
-        {4, "Dr. Emily Brown", "General Medicine", 0},
-        {5, "Dr. David Wilson", "Neurology", 0},
-        {6, "Dr. Lisa Anderson", "Dermatology", 0},
-        {7, "Dr. James Taylor", "Psychiatry", 0}
+        {1, "Dr. Rajesh Kumar", "Cardiology", 0},
+        {2, "Dr. Priya Sharma", "Pediatrics", 0},
+        {3, "Dr. Anil Patel", "Orthopedics", 0},
+        {4, "Dr. Kavita Nair", "General Medicine", 0},
+        {5, "Dr. Suresh Iyer", "Neurology", 0},
+        {6, "Dr. Neha Desai", "Dermatology", 0},
+        {7, "Dr. Vikram Rao", "Psychiatry", 0}
     };
 
     struct Patient samplePatients[] = {
-        {101, "Alice Thompson", 45, "Hypertension", 2, 1, 0},
-        {102, "Bob Williams", 28, "Fractured Arm", 1, 1, 1},
-        {103, "Carol Davis", 35, "Migraine", 3, 1, 0},
-        {104, "Daniel Miller", 62, "Diabetes", 4, 1, 0},
-        {105, "Eva Garcia", 7, "Flu", 1, 1, 0},
-        {106, "Frank Wilson", 51, "Back Pain", 2, 1, 0},
-        {107, "Grace Lee", 29, "Anxiety", 5, 1, 0},
-        {108, "Henry Martinez", 41, "Skin Rash", 1, 1, 0},
-        {109, "Isabella Clark", 73, "Heart Disease", 6, 1, 1},
-        {110, "Jack Wright", 18, "Sports Injury", 2, 1, 0},
-        {111, "Karen White", 55, "Depression", 4, 1, 0},
-        {112, "Leo Rodriguez", 31, "Insomnia", 3, 1, 0},
-        {113, "Maria Hernandez", 9, "Tonsillitis", 2, 1, 0},
-        {114, "Nathan Turner", 67, "Arthritis", 5, 1, 0},
-        {115, "Olivia Parker", 22, "Severe Allergies", 1, 1, 1}
+        {101, "Amit Mehta", 52, "Hypertension", 3, 1, 0},
+        {102, "Sneha Reddy", 34, "Fractured Leg", 2, 1, 1},
+        {103, "Rahul Kapoor", 40, "Migraine", 4, 1, 0},
+        {104, "Sunita Verma", 61, "Diabetes", 5, 1, 0},
+        {105, "Arjun Joshi", 6, "Viral Fever", 1, 1, 0},
+        {106, "Pooja Singh", 47, "Back Pain", 3, 1, 0},
+        {107, "Ravi Nair", 31, "Anxiety", 2, 1, 0},
+        {108, "Lakshmi Rao", 55, "Skin Allergy", 2, 1, 0},
+        {109, "Rajiv Bhatia", 72, "Heart Disease", 6, 1, 1},
+        {110, "Ishaan Gupta", 19, "Sports Injury", 1, 1, 0},
+        {111, "Deepa Choudhury", 50, "Depression", 3, 1, 0},
+        {112, "Nisha Jain", 28, "Insomnia", 4, 1, 0},
+        {113, "Kabir Das", 8, "Tonsillitis", 1, 1, 0},
+        {114, "Meena Yadav", 65, "Arthritis", 4, 1, 0},
+        {115, "Simran Kaur", 25, "Severe Allergies", 2, 1, 1}
     };
 
     doctorCount = sizeof(sampleDoctors) / sizeof(sampleDoctors[0]);
@@ -63,11 +63,10 @@ int main() {
 
     patientCount = sizeof(samplePatients) / sizeof(samplePatients[0]);
     for (int i = 0; i < patientCount; i++) {
-        
         patients[i] = samplePatients[i];
     }
 
-    FILE *fp = fopen("hospital_data.bin", "wb");
+    FILE *fp = fopen("hospital_data_india.bin", "wb");
     if (fp == NULL) {
         printf("Error creating data file!\n");
         return 1;
