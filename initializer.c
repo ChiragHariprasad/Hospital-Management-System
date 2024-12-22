@@ -5,7 +5,6 @@
 #define MAX_DOCTORS 10
 #define MAX_NAME_LEN 50
 
-// Structure definitions (must match main program)
 struct Doctor {
     int id;
     char name[MAX_NAME_LEN];
@@ -24,12 +23,11 @@ struct Patient {
 };
 
 int main() {
-    struct Patient patients[MAX_PATIENTS] = {0};  // Initialize all to zero
-    struct Doctor doctors[MAX_DOCTORS] = {0};     // Initialize all to zero
+    struct Patient patients[MAX_PATIENTS] = {0};
+    struct Doctor doctors[MAX_DOCTORS] = {0};
     int patientCount = 0;
     int doctorCount = 0;
 
-    // Initialize doctors
     struct Doctor sampleDoctors[] = {
         {1, "Dr. John Smith", "Cardiology", 0},
         {2, "Dr. Sarah Johnson", "Pediatrics", 0},
@@ -40,7 +38,6 @@ int main() {
         {7, "Dr. James Taylor", "Psychiatry", 0}
     };
 
-    // Initialize patients
     struct Patient samplePatients[] = {
         {101, "Alice Thompson", 45, "Hypertension", 2, 1, 0},
         {102, "Bob Williams", 28, "Fractured Arm", 1, 1, 1},
@@ -59,31 +56,26 @@ int main() {
         {115, "Olivia Parker", 22, "Severe Allergies", 1, 1, 1}
     };
 
-    // Copy doctors
     doctorCount = sizeof(sampleDoctors) / sizeof(sampleDoctors[0]);
     for (int i = 0; i < doctorCount; i++) {
         doctors[i] = sampleDoctors[i];
     }
 
-    // Copy patients
     patientCount = sizeof(samplePatients) / sizeof(samplePatients[0]);
     for (int i = 0; i < patientCount; i++) {
-        // Simple direct placement for the data file
+        
         patients[i] = samplePatients[i];
     }
 
-    // Write to binary file
     FILE *fp = fopen("hospital_data.bin", "wb");
     if (fp == NULL) {
         printf("Error creating data file!\n");
         return 1;
     }
 
-    // Write counts
     fwrite(&patientCount, sizeof(int), 1, fp);
     fwrite(&doctorCount, sizeof(int), 1, fp);
 
-    // Write full arrays
     fwrite(patients, sizeof(struct Patient), MAX_PATIENTS, fp);
     fwrite(doctors, sizeof(struct Doctor), MAX_DOCTORS, fp);
 
