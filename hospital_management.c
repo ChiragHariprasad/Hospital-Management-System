@@ -8,32 +8,36 @@
 #endif
 
 #define MAX_PATIENTS 100
-#define MAX_DOCTORS 10
+#define MAX_DOCTORS 30
 #define MAX_NAME_LEN 50 
 
-
+// Structure for storing doctor info
 struct Doctor {
     int id;
     char name[MAX_NAME_LEN];
     char specialty[MAX_NAME_LEN];
-    int isBusy;  
+    int isBusy;
+    int patientsAttended;  
 };
 
+// Structure for storing patient info
 struct Patient {
     int id;
     char name[MAX_NAME_LEN];
     int age;
     char disease[MAX_NAME_LEN];
-    int visitCount;
+    int visitCount;  // Changed from visitHistory to counter
     int occupied;
-    int isEmergency;
+    int isEmergency;  // New field for priority
+    int assignedDoctorId;  // New field to track assigned doctor
 };
 
+// Priority Queue structure
 struct PriorityQueue {
     int front, rear;
     struct {
         int patientId;
-        int priority; 
+        int priority;  // 1 for emergency, 0 for common
     } items[MAX_PATIENTS];
 };
 void clearScreen() {
@@ -46,6 +50,7 @@ void printHeader(const char* title) {
     printf("%s\n\n", "========================================");
 }
 
+// Initialize Priority Queue
 void initPriorityQueue(struct PriorityQueue* q) {
     q->front = q->rear = -1;
 }
@@ -71,6 +76,7 @@ void removeDoctor(struct Doctor doctors[], int *doctorCount) {
 
     for (int i = 0; i < *doctorCount; i++) {
         if (doctors[i].id == id) {
+            // Shift remaining doctors to fill the gap
             for (int j = i; j < *doctorCount - 1; j++) {
                 doctors[j] = doctors[j + 1];
             }
@@ -92,24 +98,26 @@ void addDoctor(struct Doctor doctors[], int *doctorCount) {
     struct Doctor newDoctor;
     printf("Enter Doctor ID: ");
     scanf("%d", &newDoctor.id);
-    getchar();
+    getchar(); // Consume leftover newline
     printf("Enter Doctor Name: ");
     fgets(newDoctor.name, MAX_NAME_LEN, stdin);
-    newDoctor.name[strcspn(newDoctor.name, "\n")] = 0;
+    newDoctor.name[strcspn(newDoctor.name, "\n")] = 0; // Remove newline
     printf("Enter Doctor Specialty: ");
     fgets(newDoctor.specialty, MAX_NAME_LEN, stdin);
-    newDoctor.specialty[strcspn(newDoctor.specialty, "\n")] = 0;
-    newDoctor.isBusy = 0;
+    newDoctor.specialty[strcspn(newDoctor.specialty, "\n")] = 0; // Remove newline
+    newDoctor.isBusy = 0; // Initialize as not busy
 
     doctors[*doctorCount] = newDoctor;
     (*doctorCount)++;
     printf("Doctor added successfully!\n");
 }
 
+// Check if Priority Queue is empty
 int isPriorityQueueEmpty(struct PriorityQueue* q) {
     return (q->front == -1);
 }
 
+// Add patient to Priority Queue
 void enqueuePriority(struct PriorityQueue* q, int patientId, int priority) {
     if (q->rear == MAX_PATIENTS - 1) {
         printf("Queue is full\n");
@@ -123,6 +131,7 @@ void enqueuePriority(struct PriorityQueue* q, int patientId, int priority) {
         return;
     }
 
+    // Find position for new patient based on priority
     int i;
     for (i = q->rear; i >= q->front; i--) {
         if (q->items[i].priority >= priority) {
@@ -136,6 +145,7 @@ void enqueuePriority(struct PriorityQueue* q, int patientId, int priority) {
     q->rear++;
 }
 
+// Remove patient from Priority Queue
 int dequeuePriority(struct PriorityQueue* q) {
     if (isPriorityQueueEmpty(q)) {
         printf("Queue is empty\n");
@@ -149,6 +159,7 @@ int dequeuePriority(struct PriorityQueue* q) {
     return patientId;
 }
 
+// Save data to file
 void saveData(struct Patient patients[], int patientCount, struct Doctor doctors[], int doctorCount) {
     FILE *fp = fopen("hospital_data.bin", "wb");
     if (fp == NULL) {
@@ -165,6 +176,7 @@ void saveData(struct Patient patients[], int patientCount, struct Doctor doctors
     printf("Data saved successfully!\n");
 }
 
+// Load data from file
 void loadData(struct Patient patients[], int *patientCount, struct Doctor doctors[], int *doctorCount) {
     FILE *fp = fopen("hospital_data.bin", "rb");
     if (fp == NULL) {
@@ -181,7 +193,9 @@ void loadData(struct Patient patients[], int *patientCount, struct Doctor doctor
     printf("Data loaded successfully!\n");
 }
 
-void assignToDoctor(struct Patient patients[], struct Doctor doctors[], int patientId, int doctorCount) {
+// Assign patient to a specific doctor by ID
+void assignToDoctor(struct Patient patients[], struct Doctor doctors[], int patientId, int doctorId, int doctorCount) {
+    // Find the patient
     int patientIndex = -1;
     for (int i = 0; i < MAX_PATIENTS; i++) {
         if (patients[i].occupied && patients[i].id == patientId) {
@@ -195,17 +209,38 @@ void assignToDoctor(struct Patient patients[], struct Doctor doctors[], int pati
         return;
     }
 
+    // Find the specified doctor by ID
     for (int i = 0; i < doctorCount; i++) {
-        if (!doctors[i].isBusy) {
-            doctors[i].isBusy = 1;
-            patients[patientIndex].visitCount++;
-            printf("Patient assigned to4 %s\n", doctors[i].name);
-            return;
+        if (doctors[i].id == doctorId) {
+            if (!doctors[i].isBusy) {
+                doctors[i].isBusy = 1;
+                doctors[i].patientsAttended++;  // Increment the counter
+                patients[patientIndex].visitCount++;  // Increment patient visit count
+                patients[patientIndex].assignedDoctorId = doctorId;  // Set assigned doctor ID
+                printf("Patient assigned to Doctor %s\n", doctors[i].name);
+                return;
+            } else {
+                printf("Doctor is busy.\n");
+                return;
+            }
         }
     }
-    printf("No doctors available at the moment\n");
+    printf("Doctor not found.\n");
 }
 
+// Display doctor performance
+void displayDoctorPerformance(struct Doctor doctors[], int doctorCount) {
+    printf("\nDoctor Performance Tracker\n");
+    printf("%-5s %-20s %-20s %-15s\n", "ID", "Name", "Specialty", "Patients Attended");
+    printf("%-5s %-20s %-20s %-15s\n", "--", "------------------", "------------------", "-----------------");
+    for (int i = 0; i < doctorCount; i++) {
+        if (doctors[i].patientsAttended > 0) {  // Only display doctors who have attended patients
+            printf("%-5d %-20s %-20s %-15d\n", doctors[i].id, doctors[i].name, doctors[i].specialty, doctors[i].patientsAttended);
+        }
+    }
+}
+
+// Hash function
 int hash(int id) {
     return id % MAX_PATIENTS;
 }
@@ -337,6 +372,22 @@ void displayQueue(struct PriorityQueue* q, struct Patient patients[]) {
     pauseExecution();
 }
 
+void displayPatientInfo(struct Patient patients[], int patientId) {
+    for (int i = 0; i < MAX_PATIENTS; i++) {
+        if (patients[i].occupied && patients[i].id == patientId) {
+            printf("Patient ID: %d\n", patients[i].id);
+            printf("Name: %s\n", patients[i].name);
+            printf("Age: %d\n", patients[i].age);
+            printf("Disease: %s\n", patients[i].disease);
+            printf("Visits: %d\n", patients[i].visitCount);
+            printf("Emergency: %s\n", patients[i].isEmergency ? "Yes" : "No");
+            printf("Assigned Doctor ID: %d\n", patients[i].assignedDoctorId);
+            return;
+        }
+    }
+    printf("Patient not found.\n");
+}
+
 int main() {
     struct Patient patients[MAX_PATIENTS] = {0};
     int patientCount = 0;
@@ -412,6 +463,7 @@ int main() {
                 printf("2. Remove Doctor\n");
                 printf("3. Display Doctor Status\n");
                 printf("4. Mark Doctor as Available\n");
+                printf("5. Doctor Performance\n");
                 printDivider();
                 printf("Enter your choice: ");
                 int doctorChoice;
@@ -430,24 +482,51 @@ int main() {
                         break;
                     case 4: {
                         printHeader("Mark Doctor as Available");
+                        // New code to display busy doctors
+                        printf("Currently Busy Doctors:\n");
+                        printf("%-5s %-20s %-20s\n", "ID", "Name", "Specialty");
+                        printDivider();
+                        for (int i = 0; i < doctorCount; i++) {
+                            if (doctors[i].isBusy) {  // Only show busy doctors
+                                printf("%-5d %-20s %-20s\n", doctors[i].id, doctors[i].name, doctors[i].specialty);
+                            }
+                        }
+                        
                         int docId;
-                        printf("Enter Doctor ID: ");
+                        printf("Enter Doctor ID (or 0 to mark all as available): ");
                         scanf("%d", &docId);
                         getchar();
                         
-                        int found = 0;
-                        for (int i = 0; i < doctorCount; i++) {
-                            if (doctors[i].id == docId) {
-                                doctors[i].isBusy = 0;
-                                found = 1;
-                                printf("Doctor marked as available.\n");
-                                break;
+                        if (docId == 0) {
+                            // Mark all doctors as available
+                            for (int i = 0; i < doctorCount; i++) {
+                                doctors[i].isBusy = 0;  // Set all doctors to available
                             }
+                            printf("All doctors marked as available.\n");
+                        } else {
+                            int found = 0;
+                            for (int i = 0; i < doctorCount; i++) {
+                                if (doctors[i].id == docId) {
+                                    doctors[i].isBusy = 0;
+                                    found = 1;
+                                    printf("Doctor marked as available.\n");
+                                    break;
+                                }
+                            }
+                            if (!found) printf("Doctor not found.\n");
                         }
-                        if (!found) printf("Doctor not found.\n");
                         pauseExecution();
                         break;
                     }
+                    case 5: {
+                        printHeader("Doctor Performance");
+                        displayDoctorPerformance(doctors, doctorCount);
+                        pauseExecution();
+                        break;
+                    }
+                    default:
+                        printf("Invalid choice. Please try again.\n");
+                        pauseExecution();
                 }
                 break;
             }
@@ -493,7 +572,48 @@ int main() {
                         printHeader("Remove Patient from Queue");
                         int patientId = dequeuePriority(&waitingQueue);
                         if (patientId != -1) {
-                            assignToDoctor(patients, doctors, patientId, doctorCount);
+                            // Find the patient to get their assigned doctor
+                            int patientIndex = -1;
+                            for (int i = 0; i < MAX_PATIENTS; i++) {
+                                if (patients[i].occupied && patients[i].id == patientId) {
+                                    patientIndex = i;
+                                    break;
+                                }
+                            }
+
+                            if (patientIndex != -1) {
+                                int previousDoctorId = patients[patientIndex].assignedDoctorId;
+                                char* previousDoctorSpecialty = NULL;
+
+                                // Find the previous doctor and their specialty
+                                for (int i = 0; i < doctorCount; i++) {
+                                    if (doctors[i].id == previousDoctorId) {
+                                        previousDoctorSpecialty = doctors[i].specialty;
+                                        break;
+                                    }
+                                }
+
+                                // Display the previous doctor information
+                                printf("Previous Doctor Assigned: ID %d, Specialty: %s\n", previousDoctorId, previousDoctorSpecialty);
+
+                                // Show available doctors with the same specialty
+                                printf("Available Doctors with Specialty '%s':\n", previousDoctorSpecialty);
+                                printf("%-5s %-20s %-20s\n", "ID", "Name", "Specialty");
+                                printDivider();
+                                for (int i = 0; i < doctorCount; i++) {
+                                    if (!doctors[i].isBusy && strcmp(doctors[i].specialty, previousDoctorSpecialty) == 0) {
+                                        printf("%-5d %-20s %-20s\n", doctors[i].id, doctors[i].name, doctors[i].specialty);
+                                    }
+                                }
+
+                                // Prompt user to select a doctor
+                                int selectedDoctorId;
+                                printf("Enter Doctor ID to assign the patient: ");
+                                scanf("%d", &selectedDoctorId);
+
+                                // Assign patient to the selected doctor
+                                assignToDoctor(patients, doctors, patientId, selectedDoctorId, doctorCount);
+                            }
                         }
                         pauseExecution();
                         break;
