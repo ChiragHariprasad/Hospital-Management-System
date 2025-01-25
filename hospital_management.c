@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <ctype.h>
 #ifdef _WIN32
 #define CLEAR "cls"
 #else
@@ -265,6 +266,7 @@ void displayDoctorPerformance(struct Doctor doctors[], int doctorCount) {
 int hash(int id) {
     return id % MAX_PATIENTS;
 }
+
 void addPatient(struct Patient patients[], int* patientCount) {
     printHeader("Add New Patient");
     
@@ -293,10 +295,119 @@ void addPatient(struct Patient patients[], int* patientCount) {
     fgets(newPatient.disease, MAX_NAME_LEN, stdin);
     newPatient.disease[strcspn(newPatient.disease, "\n")] = 0;
     
+    // Available specialties with more comprehensive mapping
+    char *specialties[] = {
+        "General Medicine", 
+        "Orthopedics", 
+        "Cardiology", 
+        "Neurology", 
+        "Pulmonology", 
+        "Gastroenterology", 
+        "Oncology", 
+        "Pediatrics", 
+        "Dermatology",
+        "Gynecology",
+        "Urology", 
+        "Psychiatry",
+        "Endocrinology",
+        "Nephrology",
+        "Rheumatology"
+    };
+    int specialtyCount = sizeof(specialties) / sizeof(specialties[0]);
+    
+    // Improved specialty detection
+    char lowercaseDisease[MAX_NAME_LEN];
+    strcpy(lowercaseDisease, newPatient.disease);
+    for (int i = 0; lowercaseDisease[i]; i++) {
+        lowercaseDisease[i] = tolower(lowercaseDisease[i]);
+    }
+    
+    char suggestedSpecialty[MAX_NAME_LEN];
+    if (strstr(lowercaseDisease, "heart") || strstr(lowercaseDisease, "cardiac") || 
+        strstr(lowercaseDisease, "chest pain") || strstr(lowercaseDisease, "blood pressure") ||
+        strstr(lowercaseDisease, "cholesterol")) {
+        strcpy(suggestedSpecialty, "Cardiology");
+    } else if (strstr(lowercaseDisease, "bone") || strstr(lowercaseDisease, "fracture") || 
+               strstr(lowercaseDisease, "arthritis") || strstr(lowercaseDisease, "shoulder") || 
+               strstr(lowercaseDisease, "back") || strstr(lowercaseDisease, "knee")) {
+        strcpy(suggestedSpecialty, "Orthopedics");
+    } else if (strstr(lowercaseDisease, "lung") || strstr(lowercaseDisease, "respiratory") || 
+               strstr(lowercaseDisease, "breathing") || strstr(lowercaseDisease, "pneumonia") ||
+               strstr(lowercaseDisease, "screening")) {
+        strcpy(suggestedSpecialty, "Pulmonology");
+    } else if (strstr(lowercaseDisease, "brain") || strstr(lowercaseDisease, "neurological") || 
+               strstr(lowercaseDisease, "headache") || strstr(lowercaseDisease, "migraine") ||
+               strstr(lowercaseDisease, "memory") || strstr(lowercaseDisease, "nerve")) {
+        strcpy(suggestedSpecialty, "Neurology");
+    } else if (strstr(lowercaseDisease, "cancer") || strstr(lowercaseDisease, "tumor") || 
+               strstr(lowercaseDisease, "oncology")) {
+        strcpy(suggestedSpecialty, "Oncology");
+    } else if (strstr(lowercaseDisease, "child") || strstr(lowercaseDisease, "kid") || 
+               strstr(lowercaseDisease, "chicken pox") || strstr(lowercaseDisease, "vaccination")) {
+        strcpy(suggestedSpecialty, "Pediatrics");
+    } else if (strstr(lowercaseDisease, "skin") || strstr(lowercaseDisease, "psoriasis") || 
+               strstr(lowercaseDisease, "allergy")) {
+        strcpy(suggestedSpecialty, "Dermatology");
+    } else if (strstr(lowercaseDisease, "stomach") || strstr(lowercaseDisease, "ulcer") || 
+               strstr(lowercaseDisease, "digestive")) {
+        strcpy(suggestedSpecialty, "Gastroenterology");
+    } else if (strstr(lowercaseDisease, "mental") || strstr(lowercaseDisease, "psychiatric") || 
+               strstr(lowercaseDisease, "health")) {
+        strcpy(suggestedSpecialty, "Psychiatry");
+    } else if (strstr(lowercaseDisease, "thyroid") || strstr(lowercaseDisease, "diabetes")) {
+        strcpy(suggestedSpecialty, "Endocrinology");
+    } else if (strstr(lowercaseDisease, "kidney") || strstr(lowercaseDisease, "renal")) {
+        strcpy(suggestedSpecialty, "Nephrology");
+    } else if (strstr(lowercaseDisease, "joint") || strstr(lowercaseDisease, "inflammation")) {
+        strcpy(suggestedSpecialty, "Rheumatology");
+    } else if (strstr(lowercaseDisease, "female") || strstr(lowercaseDisease, "pregnancy")) {
+        strcpy(suggestedSpecialty, "Gynecology");
+    } else if (strstr(lowercaseDisease, "prostate") || strstr(lowercaseDisease, "urinary")) {
+        strcpy(suggestedSpecialty, "Urology");
+    } else if (strstr(lowercaseDisease, "hypertension") || 
+               strstr(lowercaseDisease, "fatigue") || 
+               strstr(lowercaseDisease, "fever")) {
+        strcpy(suggestedSpecialty, "General Medicine");
+    } else {
+        strcpy(suggestedSpecialty, "General Medicine");
+    }
+    
+    printf("Suggested Specialty: %s\n", suggestedSpecialty);
+    printf("Accept suggested specialty? (0-No, 1-Yes): ");
+    int acceptSpecialty;
+    scanf("%d", &acceptSpecialty);
+    
+    char specialty[MAX_NAME_LEN];
+    if (!acceptSpecialty) {
+        // Display specialty options
+        printf("\nSelect Specialty:\n");
+        for (int i = 0; i < specialtyCount; i++) {
+            printf("%d. %s\n", i + 1, specialties[i]);
+        }
+        
+        int specialtyChoice;
+        printf("Enter specialty number (1-%d): ", specialtyCount);
+        scanf("%d", &specialtyChoice);
+        getchar();
+        
+        // Validate and assign specialty
+        if (specialtyChoice > 0 && specialtyChoice <= specialtyCount) {
+            strcpy(specialty, specialties[specialtyChoice - 1]);
+        } else {
+            strcpy(specialty, "General Medicine");
+        }
+    } else {
+        strcpy(specialty, suggestedSpecialty);
+    }
+    
+    printf("Selected Specialty: %s\n", specialty);
+    
     printf("Emergency case? (1-Yes, 0-No): ");
     scanf("%d", &newPatient.isEmergency);
     
     newPatient.visitCount = 0;
+    newPatient.assignedDoctorId = -1;
+    strcpy(newPatient.visitHistory[0].doctorName, specialty);
     
     int index = hash(newPatient.id);
     while (patients[index].occupied) {
@@ -671,14 +782,11 @@ int main() {
                                 int previousDoctorId = patients[patientIndex].assignedDoctorId;
                                 char previousDoctorSpecialty[MAX_NAME_LEN] = "Unknown";
 
-                                // Find the previous doctor and their specialty
-                                for (int i = 0; i < doctorCount; i++) {
-                                    if (doctors[i].id == previousDoctorId) {
-                                        strcpy(previousDoctorSpecialty, doctors[i].specialty);
-                                        break;
-                                    }
-                                }
-
+                                // If no previous doctor was assigned, use the specialty from visit history
+                            if (previousDoctorId == -1 && patientIndex != -1) {
+                                strcpy(previousDoctorSpecialty, patients[patientIndex].visitHistory[0].doctorName);
+                            }
+                            
                                 // Display the previous doctor information
                                 printf("Previous Doctor Assigned: ID %d, Specialty: %s\n", previousDoctorId, previousDoctorSpecialty);
 
