@@ -1,7 +1,3 @@
-Here’s the README with an added section highlighting the data structures used in the project:
-
----
-
 # Hospital Management System
 
 ## Overview
@@ -156,7 +152,3 @@ Enter your choice:
 - Implement user authentication for secure access.
 - Add a GUI for better usability and enhanced features.
 - Extend functionality to include hospital inventory and billing management.
-
----
-
-Let me know if you need further adjustments or clarifications!
