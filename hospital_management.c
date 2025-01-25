@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <string.h>
-#ifdef _WIN32
 #include <stdlib.h>
+#include <limits.h>
+#ifdef _WIN32
 #define CLEAR "cls"
 #else
 #define CLEAR "clear"
@@ -10,6 +11,7 @@
 #define MAX_PATIENTS 100
 #define MAX_DOCTORS 30
 #define MAX_NAME_LEN 50 
+#define MAX_VISIT_HISTORY 20
 
 // Structure for storing doctor info
 struct Doctor {
@@ -20,16 +22,23 @@ struct Doctor {
     int patientsAttended;  
 };
 
+// Structure for storing visit records
+struct VisitRecord {
+    char doctorName[MAX_NAME_LEN]; // Name of the doctor
+    char notes[MAX_NAME_LEN]; // Notes from the visit
+};
+
 // Structure for storing patient info
 struct Patient {
     int id;
     char name[MAX_NAME_LEN];
     int age;
     char disease[MAX_NAME_LEN];
-    int visitCount;  // Changed from visitHistory to counter
+    int visitCount;  // Counter for visits
     int occupied;
     int isEmergency;  // New field for priority
     int assignedDoctorId;  // New field to track assigned doctor
+    struct VisitRecord visitHistory[MAX_VISIT_HISTORY]; // Array of visit records
 };
 
 // Priority Queue structure
@@ -159,7 +168,7 @@ int dequeuePriority(struct PriorityQueue* q) {
     return patientId;
 }
 
-// Save data to file
+// Function to save data to file
 void saveData(struct Patient patients[], int patientCount, struct Doctor doctors[], int doctorCount) {
     FILE *fp = fopen("hospital_data.bin", "wb");
     if (fp == NULL) {
@@ -176,7 +185,7 @@ void saveData(struct Patient patients[], int patientCount, struct Doctor doctors
     printf("Data saved successfully!\n");
 }
 
-// Load data from file
+// Function to load data from file
 void loadData(struct Patient patients[], int *patientCount, struct Doctor doctors[], int *doctorCount) {
     FILE *fp = fopen("hospital_data.bin", "rb");
     if (fp == NULL) {
@@ -184,12 +193,24 @@ void loadData(struct Patient patients[], int *patientCount, struct Doctor doctor
         return;
     }
 
-    fread(patientCount, sizeof(int), 1, fp);
-    fread(doctorCount, sizeof(int), 1, fp);
-    fread(patients, sizeof(struct Patient), MAX_PATIENTS, fp);
-    fread(doctors, sizeof(struct Doctor), MAX_DOCTORS, fp);
+    // First read patient and doctor counts
+    if (fread(patientCount, sizeof(int), 1, fp) != 1 ||
+        fread(doctorCount, sizeof(int), 1, fp) != 1) {
+        printf("Error reading counts from file\n");
+        fclose(fp);
+        return;
+    }
+
+    // Then read patients and doctors
+    size_t patientsRead = fread(patients, sizeof(struct Patient), MAX_PATIENTS, fp);
+    size_t doctorsRead = fread(doctors, sizeof(struct Doctor), MAX_DOCTORS, fp);
 
     fclose(fp);
+
+    if (patientsRead != MAX_PATIENTS || doctorsRead != MAX_DOCTORS) {
+        printf("Warning: Incomplete data read\n");
+    }
+
     printf("Data loaded successfully!\n");
 }
 
@@ -388,11 +409,99 @@ void displayPatientInfo(struct Patient patients[], int patientId) {
     printf("Patient not found.\n");
 }
 
+// New function to add a visit record
+void addVisitRecord(struct Patient *patient, const char *doctorName, const char *notes) {
+    if (patient->visitCount < MAX_VISIT_HISTORY) {
+        strncpy(patient->visitHistory[patient->visitCount].doctorName, doctorName, MAX_NAME_LEN);
+        strncpy(patient->visitHistory[patient->visitCount].notes, notes, MAX_NAME_LEN);
+        patient->visitCount++;
+    } else {
+        printf("Visit history is full for patient ID %d.\n", patient->id);
+    }
+}
+
+void displayVisitHistory(struct Patient patients[], struct Doctor doctors[], int patientId) {
+    for (int i = 0; i < MAX_PATIENTS; i++) {
+        if (patients[i].occupied && patients[i].id == patientId) {
+            printf("Visit History for Patient ID: %d, Name: %s\n", 
+                   patients[i].id, patients[i].name);
+            
+            if (patients[i].visitCount == 0) {
+                printf("No visit records found.\n");
+                return;
+            }
+            
+            for (int j = 0; j < patients[i].visitCount; j++) {
+                // Find the doctor's full name based on the assigned doctor ID
+                char doctorFullName[MAX_NAME_LEN] = "Unknown Doctor";
+                for (int k = 0; k < MAX_DOCTORS; k++) {
+                    if (patients[i].assignedDoctorId == doctors[k].id) {
+                        strcpy(doctorFullName, doctors[k].name);
+                        break;
+                    }
+                }
+                
+                printf("%d. Doctor: %s\n", j + 1, 
+                       patients[i].visitHistory[j].doctorName[0] != '\0' ? 
+                       patients[i].visitHistory[j].doctorName : doctorFullName);
+                printf("   Reason: %s\n", patients[i].disease);
+                printf("   Notes: %s\n", patients[i].visitHistory[j].notes);
+                printf("\n");
+            }
+            return;
+        }
+    }
+    printf("Patient not found.\n");
+}
+
+void markDoctorAvailable(struct Doctor doctors[], int doctorCount, struct Patient patients[]) {
+    printf("Currently Busy Doctors:\n");
+    printf("%-5s %-20s %-20s\n", "ID", "Name", "Specialty");
+    printf("----------------------------------------\n");
+    for (int i = 0; i < doctorCount; i++) {
+        if (doctors[i].isBusy) {
+            printf("%-5d %-20s %-20s\n", doctors[i].id, doctors[i].name, doctors[i].specialty);
+        }
+    }
+
+    int docId;
+    printf("Enter Doctor ID to mark as available: ");
+    scanf("%d", &docId);
+    getchar();
+
+    int found = 0;
+    for (int i = 0; i < doctorCount; i++) {
+        if (doctors[i].id == docId && doctors[i].isBusy) {
+            doctors[i].isBusy = 0;  // Mark doctor available
+            printf("Doctor marked as available.\n");
+            found = 1;
+
+            // Show the patient they attended and add notes
+            for (int j = 0; j < MAX_PATIENTS; j++) {
+                if (patients[j].occupied && patients[j].assignedDoctorId == docId) {
+                    printf("\nAttended Patient: %s (ID: %d)\n", patients[j].name, patients[j].id);
+                    printf("Reason for Visit: %s\n", patients[j].disease);
+
+                    printf("Enter Notes for the Visit: ");
+                    fgets(patients[j].visitHistory[patients[j].visitCount - 1].notes, MAX_NAME_LEN, stdin);
+                    patients[j].visitHistory[patients[j].visitCount - 1].notes[strcspn(patients[j].visitHistory[patients[j].visitCount - 1].notes, "\n")] = 0;
+                    break;
+                }
+            }
+            break;
+        }
+    }
+
+    if (!found) {
+        printf("Doctor not found or not busy.\n");
+    }
+}
+
+
 int main() {
     struct Patient patients[MAX_PATIENTS] = {0};
-    int patientCount = 0;
-    
     struct Doctor doctors[MAX_DOCTORS] = {0};
+    int patientCount = 0;
     int doctorCount = 0;
     
     struct PriorityQueue waitingQueue;
@@ -418,6 +527,7 @@ int main() {
                 printf("1. Add Patient\n");
                 printf("2. Remove Patient\n");
                 printf("3. Display Patient Records\n");
+                printf("4. View Patient Visit History\n");
                 printDivider();
                 printf("Enter your choice: ");
                 int recordChoice;
@@ -454,6 +564,16 @@ int main() {
                     case 3:
                         displayPatients(patients, patientCount);
                         break;
+                    case 4: {
+                        printHeader("View Patient Visit History");
+                        int id;
+                        printf("Enter Patient ID to view visit history: ");
+                        scanf("%d", &id);
+                        getchar();
+                        displayVisitHistory(patients, doctors, id);
+                        pauseExecution();
+                        break;
+                    }
                 }
                 break;
             }
@@ -480,44 +600,10 @@ int main() {
                     case 3:
                         displayDoctors(doctors, doctorCount);
                         break;
-                    case 4: {
-                        printHeader("Mark Doctor as Available");
-                        // New code to display busy doctors
-                        printf("Currently Busy Doctors:\n");
-                        printf("%-5s %-20s %-20s\n", "ID", "Name", "Specialty");
-                        printDivider();
-                        for (int i = 0; i < doctorCount; i++) {
-                            if (doctors[i].isBusy) {  // Only show busy doctors
-                                printf("%-5d %-20s %-20s\n", doctors[i].id, doctors[i].name, doctors[i].specialty);
-                            }
-                        }
-                        
-                        int docId;
-                        printf("Enter Doctor ID (or 0 to mark all as available): ");
-                        scanf("%d", &docId);
-                        getchar();
-                        
-                        if (docId == 0) {
-                            // Mark all doctors as available
-                            for (int i = 0; i < doctorCount; i++) {
-                                doctors[i].isBusy = 0;  // Set all doctors to available
-                            }
-                            printf("All doctors marked as available.\n");
-                        } else {
-                            int found = 0;
-                            for (int i = 0; i < doctorCount; i++) {
-                                if (doctors[i].id == docId) {
-                                    doctors[i].isBusy = 0;
-                                    found = 1;
-                                    printf("Doctor marked as available.\n");
-                                    break;
-                                }
-                            }
-                            if (!found) printf("Doctor not found.\n");
-                        }
+                    case 4:
+                        markDoctorAvailable(doctors, doctorCount, patients);
                         pauseExecution();
                         break;
-                    }
                     case 5: {
                         printHeader("Doctor Performance");
                         displayDoctorPerformance(doctors, doctorCount);
