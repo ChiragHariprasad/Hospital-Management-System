@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <time.h>
 #include <limits.h>
 
 #define MAX_PATIENTS 100
 #define MAX_DOCTORS 30
 #define MAX_NAME_LEN 50
+#define MAX_VISIT_HISTORY 20
 
 struct Doctor {
     int id;
@@ -14,6 +14,11 @@ struct Doctor {
     char specialty[MAX_NAME_LEN];
     int isBusy;
     int patientsAttended;
+};
+
+struct VisitRecord {
+    char doctorName[MAX_NAME_LEN]; 
+    char notes[MAX_NAME_LEN]; 
 };
 
 struct Patient {
@@ -24,24 +29,43 @@ struct Patient {
     int visitCount;
     int occupied;
     int isEmergency;
-    int assignedDoctorId;  // New field to track assigned doctor
+    int assignedDoctorId;
+    struct VisitRecord visitHistory[MAX_VISIT_HISTORY];
 };
 
-// Function to find a doctor with the least patients in a specific specialty
-int findLeastBusyDoctorInSpecialty(struct Doctor doctors[], int doctorCount, const char* specialty) {
-    int leastBusyDoctorId = -1;
+// Function to find a doctor in a specific specialty with the least patients
+int findDoctorInSpecialty(struct Doctor doctors[], int doctorCount, const char* specialty) {
     int minPatientsAttended = INT_MAX;
+    int selectedDoctorId = -1;
+    int candidateDoctors[MAX_DOCTORS];
+    int candidateCount = 0;
 
+    // First, find all doctors in the specialty
     for (int i = 0; i < doctorCount; i++) {
         if (strcmp(doctors[i].specialty, specialty) == 0) {
-            if (doctors[i].patientsAttended < minPatientsAttended) {
-                minPatientsAttended = doctors[i].patientsAttended;
-                leastBusyDoctorId = doctors[i].id;
+            candidateDoctors[candidateCount++] = i;
+        }
+    }
+
+    // If no doctors found in specialty, fallback to General Medicine
+    if (candidateCount == 0) {
+        for (int i = 0; i < doctorCount; i++) {
+            if (strcmp(doctors[i].specialty, "General Medicine") == 0) {
+                candidateDoctors[candidateCount++] = i;
             }
         }
     }
 
-    return leastBusyDoctorId;
+    // Find doctor with least patients among candidates
+    for (int i = 0; i < candidateCount; i++) {
+        int doctorIndex = candidateDoctors[i];
+        if (doctors[doctorIndex].patientsAttended < minPatientsAttended) {
+            minPatientsAttended = doctors[doctorIndex].patientsAttended;
+            selectedDoctorId = doctors[doctorIndex].id;
+        }
+    }
+
+    return selectedDoctorId;
 }
 
 int main() {
@@ -50,7 +74,7 @@ int main() {
     int patientCount = 0;
     int doctorCount = 0;
 
-    // Comprehensive doctor specialties
+    // Comprehensive doctor specialties (same as previous version)
     struct Doctor sampleDoctors[] = {
         // General Medicine
         {1, "Dr. Rajesh Kumar", "General Medicine", 0, 0},
@@ -92,50 +116,50 @@ int main() {
         {21, "Dr. Harshika Patil", "Rheumatology", 0, 0}
     };
 
-    // Comprehensive patient list with intelligent doctor assignment
+    // Comprehensive patient list from first code
     struct Patient samplePatients[] = {
         // General Medicine Patients
-        {101, "Amit Mehta", 52, "Hypertension", 3, 1, 0, 0},
-        {102, "Sneha Reddy", 34, "Fatigue", 2, 1, 0, 0},
-        {103, "Rahul Kapoor", 40, "Chronic Fever", 4, 1, 0, 0},
-        {104, "Sunita Verma", 61, "Diabetes", 5, 1, 0, 0},
+        {101, "Amit Mehta", 52, "Hypertension", 3, 1, 0, 0, {0}},
+        {102, "Sneha Reddy", 34, "Fatigue", 2, 1, 0, 0, {0}},
+        {103, "Rahul Kapoor", 40, "Chronic Fever", 4, 1, 0, 0, {0}},
+        {104, "Sunita Verma", 61, "Diabetes", 5, 1, 0, 0, {0}},
 
         // Cardiology Patients
-        {109, "Rajiv Bhatia", 72, "Heart Disease", 6, 1, 1, 0},
-        {110, "Ishaan Gupta", 19, "Chest Pain", 2, 1, 0, 0},
-        {111, "Nisha Jain", 28, "High Blood Pressure", 4, 1, 0, 0},
-        {112, "Kabir Das", 65, "Cholesterol Management", 3, 1, 0, 0},
+        {109, "Rajiv Bhatia", 72, "Heart Disease", 6, 1, 1, 0, {0}},
+        {110, "Ishaan Gupta", 19, "Chest Pain", 2, 1, 0, 0, {0}},
+        {111, "Nisha Jain", 28, "High Blood Pressure", 4, 1, 0, 0, {0}},
+        {112, "Kabir Das", 65, "Cholesterol Management", 3, 1, 0, 0, {0}},
 
         // Orthopedics Patients
-        {113, "Meena Yadav", 65, "Arthritis", 4, 1, 0, 0},
-        {114, "Simran Kaur", 25, "Shoulder Pain", 2, 1, 0, 0},
-        {202, "Vikram Singh", 45, "Back Problems", 3, 1, 0, 0},
-        {203, "Priya Patel", 55, "Knee Replacement", 2, 1, 0, 0},
+        {113, "Meena Yadav", 65, "Arthritis", 4, 1, 0, 0, {0}},
+        {114, "Simran Kaur", 25, "Shoulder Pain", 2, 1, 0, 0, {0}},
+        {202, "Vikram Singh", 45, "Back Problems", 3, 1, 0, 0, {0}},
+        {203, "Priya Patel", 55, "Knee Replacement", 2, 1, 0, 0, {0}},
 
         // Pediatrics Patients
-        {115, "Deepa Choudhury", 5, "Chickenpox", 1, 1, 0, 0},
-        {116, "Kabir Kumar", 7, "Viral Fever", 1, 1, 0, 0},
-        {117, "Ishaan Gupta", 6, "Growth Checkup", 2, 1, 0, 0},
-        {118, "Rajiv Bhatia Jr", 8, "Vaccination", 1, 1, 0, 0},
+        {115, "Deepa Choudhury", 5, "Chickenpox", 1, 1, 0, 0, {0}},
+        {116, "Kabir Kumar", 7, "Viral Fever", 1, 1, 0, 0, {0}},
+        {117, "Ishaan Gupta", 6, "Growth Checkup", 2, 1, 0, 0, {0}},
+        {118, "Rajiv Bhatia Jr", 8, "Vaccination", 1, 1, 0, 0, {0}},
 
         // Neurology Patients
-        {122, "Sunita Verma", 60, "Migraine", 4, 1, 0, 0},
-        {204, "Arun Malhotra", 55, "Memory Loss", 2, 1, 0, 0},
-        {205, "Deepika Sharma", 45, "Nerve Pain", 3, 1, 0, 0},
+        {122, "Sunita Verma", 60, "Migraine", 4, 1, 0, 0, {0}},
+        {204, "Arun Malhotra", 55, "Memory Loss", 2, 1, 0, 0, {0}},
+        {205, "Deepika Sharma", 45, "Nerve Pain", 3, 1, 0, 0, {0}},
 
         // Dermatology Patients
-        {123, "Simran Mehta", 30, "Psoriasis", 2, 1, 0, 0},
-        {206, "Ravi Kumar", 35, "Skin Allergy", 1, 1, 0, 0},
+        {123, "Simran Mehta", 30, "Psoriasis", 2, 1, 0, 0, {0}},
+        {206, "Ravi Kumar", 35, "Skin Allergy", 1, 1, 0, 0, {0}},
 
         // Other Specialty Patients
-        {124, "Ravi Bhatia", 45, "Pneumonia", 2, 1, 0, 0},
-        {125, "Priya Rani", 50, "Stomach Ulcers", 3, 1, 0, 0},
-        {126, "Amit Kapoor", 55, "Lung Screening", 4, 1, 0, 0},
-        {127, "Harish Kumar", 36, "Mental Health", 2, 1, 0, 0},
-        {128, "Kabir Mehta", 60, "Prostate Check", 2, 1, 0, 0},
-        {129, "Anjali Singh", 40, "Thyroid Issues", 3, 1, 0, 0},
-        {130, "Neelam Sharma", 50, "Kidney Function", 4, 1, 0, 0},
-        {131, "Deepika Raj", 45, "Joint Inflammation", 3, 1, 0, 0}
+        {124, "Ravi Bhatia", 45, "Pneumonia", 2, 1, 0, 0, {0}},
+        {125, "Priya Rani", 50, "Stomach Ulcers", 3, 1, 0, 0, {0}},
+        {126, "Amit Kapoor", 55, "Lung Screening", 4, 1, 0, 0, {0}},
+        {127, "Harish Kumar", 36, "Mental Health", 2, 1, 0, 0, {0}},
+        {128, "Kabir Mehta", 60, "Prostate Check", 2, 1, 0, 0, {0}},
+        {129, "Anjali Singh", 40, "Thyroid Issues", 3, 1, 0, 0, {0}},
+        {130, "Neelam Sharma", 50, "Kidney Function", 4, 1, 0, 0, {0}},
+        {131, "Deepika Raj", 45, "Joint Inflammation", 3, 1, 0, 0, {0}}
     };
 
     doctorCount = sizeof(sampleDoctors) / sizeof(sampleDoctors[0]);
@@ -148,7 +172,7 @@ int main() {
         patients[i] = samplePatients[i];
 
         // Intelligent doctor assignment based on specialty
-        int assignedDoctorId = findLeastBusyDoctorInSpecialty(doctors, doctorCount, 
+        int assignedDoctorId = findDoctorInSpecialty(doctors, doctorCount, 
             (strcmp(patients[i].disease, "Heart Disease") == 0 || 
              strcmp(patients[i].disease, "Chest Pain") == 0 || 
              strcmp(patients[i].disease, "High Blood Pressure") == 0 ||
@@ -163,6 +187,13 @@ int main() {
              strcmp(patients[i].disease, "Nerve Pain") == 0) ? "Neurology" :
             (strcmp(patients[i].disease, "Psoriasis") == 0 || 
              strcmp(patients[i].disease, "Skin Allergy") == 0) ? "Dermatology" :
+            (strcmp(patients[i].disease, "Lung Screening") == 0 || 
+             strcmp(patients[i].disease, "Pneumonia") == 0) ? "Pulmonology" :
+            (strcmp(patients[i].disease, "Prostate Check") == 0 || 
+             strcmp(patients[i].disease, "Kidney Function") == 0) ? "Urology" :
+            (strcmp(patients[i].disease, "Thyroid Issues") == 0) ? "Endocrinology" :
+            (strcmp(patients[i].disease, "Stomach Ulcers") == 0) ? "Gastroenterology" :
+            (strcmp(patients[i].disease, "Mental Health") == 0) ? "Psychiatry" :
             "General Medicine");
 
         patients[i].assignedDoctorId = assignedDoctorId;
@@ -176,6 +207,7 @@ int main() {
         }
     }
 
+    // Rest of the code remains the same as previous version
     FILE *fp = fopen("hospital_data.bin", "wb");
     if (fp == NULL) {
         printf("Error creating data file!\n");
