@@ -669,12 +669,12 @@ int main() {
 
                             if (patientIndex != -1) {
                                 int previousDoctorId = patients[patientIndex].assignedDoctorId;
-                                char* previousDoctorSpecialty = NULL;
+                                char previousDoctorSpecialty[MAX_NAME_LEN] = "Unknown";
 
                                 // Find the previous doctor and their specialty
                                 for (int i = 0; i < doctorCount; i++) {
                                     if (doctors[i].id == previousDoctorId) {
-                                        previousDoctorSpecialty = doctors[i].specialty;
+                                        strcpy(previousDoctorSpecialty, doctors[i].specialty);
                                         break;
                                     }
                                 }
@@ -686,22 +686,73 @@ int main() {
                                 printf("Available Doctors with Specialty '%s':\n", previousDoctorSpecialty);
                                 printf("%-5s %-20s %-20s\n", "ID", "Name", "Specialty");
                                 printDivider();
+                                
+                                // Track if any available doctors exist
+                                int availableDoctorsExist = 0;
                                 for (int i = 0; i < doctorCount; i++) {
                                     if (!doctors[i].isBusy && strcmp(doctors[i].specialty, previousDoctorSpecialty) == 0) {
                                         printf("%-5d %-20s %-20s\n", doctors[i].id, doctors[i].name, doctors[i].specialty);
+                                        availableDoctorsExist = 1;
                                     }
+                                }
+
+                                if (!availableDoctorsExist) {
+                                    printf("No available doctors with matching specialty.\n");
+                                    // Re-enqueue the patient if no doctors are available
+                                    enqueuePriority(&waitingQueue, patientId, patients[patientIndex].isEmergency);
+                                    printf("Patient returned to waiting queue.\n");
+                                    pauseExecution();
+                                    break;
                                 }
 
                                 // Prompt user to select a doctor
                                 int selectedDoctorId;
-                                printf("Enter Doctor ID to assign the patient: ");
-                                scanf("%d", &selectedDoctorId);
-
-                                // Assign patient to the selected doctor
-                                assignToDoctor(patients, doctors, patientId, selectedDoctorId, doctorCount);
+                                int doctorAssigned = 0;
+                                int attempts = 0;
+                                
+                                while (!doctorAssigned && attempts < 3) {
+                                    printf("Enter Doctor ID to assign the patient (Attempt %d/3): ", attempts + 1);
+                                    scanf("%d", &selectedDoctorId);
+                                    getchar(); // Consume newline
+                                    
+                                    // Check if the selected doctor matches specialty and is available
+                                    for (int i = 0; i < doctorCount; i++) {
+                                        if (doctors[i].id == selectedDoctorId) {
+                                            if (strcmp(doctors[i].specialty, previousDoctorSpecialty) == 0 && !doctors[i].isBusy) {
+                                                // Attempt to assign patient to doctor
+                                                assignToDoctor(patients, doctors, patientId, selectedDoctorId, doctorCount);
+                                                doctorAssigned = 1;
+                                                break;
+                                            } else {
+                                                if (strcmp(doctors[i].specialty, previousDoctorSpecialty) != 0) {
+                                                    printf("Error: Doctor's specialty does not match patient's previous specialty.\n");
+                                                } else if (doctors[i].isBusy) {
+                                                    printf("Error: Selected doctor is currently busy.\n");
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    if (!doctorAssigned) {
+                                        attempts++;
+                                        if (attempts < 3) {
+                                            printf("Assignment failed. Please try again.\n");
+                                        }
+                                    }
+                                }
+                                
+                                // If doctor could not be assigned after 3 attempts
+                                if (!doctorAssigned) {
+                                    printf("Failed to assign patient to a doctor after 3 attempts.\n");
+                                    // Re-enqueue the patient
+                                    enqueuePriority(&waitingQueue, patientId, patients[patientIndex].isEmergency);
+                                    printf("Patient returned to waiting queue.\n");
+                                }
+                            } else {
+                                printf("Patient not found in the system.\n");
                             }
+                            pauseExecution();
                         }
-                        pauseExecution();
                         break;
                     }
                     case 3:
